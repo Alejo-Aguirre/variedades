@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variedades</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .modal {
+            display: none;
+        }
+        .modal-active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-gray-800 p-4 text-white flex justify-between items-center">
+        <div class="flex items-center">
+            <img src="https://via.placeholder.com/50" alt="Icono" class="w-10 h-10 rounded-full mr-2">
+            <h1 class="text-xl">Variedades</h1>
+        </div>
+        <div>
+            <span id="userLabel" class="mr-4"></span>
+            <button id="loginBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Iniciar Sesión</button>
+            <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded hidden">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <main class="container mx-auto mt-10 px-4">
+        <div class="flex flex-col space-y-4">
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Compra</button>
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Venta</button>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed z-10 inset-0 overflow-y-auto modal">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full p-6 mx-4">
+                <div class="mb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Iniciar Sesión</h3>
+                </div>
+                <form id="loginForm">
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="button" id="closeModal" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">Cancelar</button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Iniciar Sesión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const modal = document.getElementById('modal');
+        const closeModal = document.getElementById('closeModal');
+        const loginForm = document.getElementById('loginForm');
+        const userLabel = document.getElementById('userLabel');
+
+        let isLoggedIn = false;
+        let userName = '';
+
+        loginBtn.addEventListener('click', () => {
+            if (!isLoggedIn) {
+                modal.classList.add('modal-active');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            isLoggedIn = false;
+            userName = '';
+            userLabel.textContent = '';
+            logoutBtn.classList.add('hidden');
+            loginBtn.textContent = 'Iniciar Sesión';
+            alert('Sesión cerrada');
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.classList.remove('modal-active');
+        });
+
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            isLoggedIn = true;
+            userName = document.getElementById('email').value.split('@')[0];
+            userLabel.textContent = `Bienvenido, ${userName}`;
+            loginBtn.textContent = 'Usuario';
+            logoutBtn.classList.remove('hidden');
+            modal.classList.remove('modal-active');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == modal) {
+                modal.classList.remove('modal-active');
+            }
+        });
+    </script>
+</body>
+</html>
+

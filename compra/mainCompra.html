@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras</title>
+    <!-- Incluye jQuery primero -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Luego incluye Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        .table-wrapper {
+            max-height: 500px;
+            overflow-x: auto; /* Permite el desplazamiento horizontal si es necesario */
+            max-width: 100%; /* Asegura que el contenedor no exceda el ancho de la pantalla */
+        }
+        .table {
+            width: 90%; /* Ajusta este valor para hacer la tabla más estrecha */
+            margin: 0 auto; /* Centra la tabla horizontalmente */
+            font-size: 0.875rem; /* Reduce el tamaño del texto en la tabla */
+        }
+        .table th, .table td {
+            padding: 0.90rem; /* Ajusta el padding para las celdas */
+        }
+        .table th:nth-child(1), .table td:nth-child(1) {
+            width: 5%; /* Ancho para la columna ID */
+        }
+        .table th:nth-child(2), .table td:nth-child(2) {
+            width: 10%; /* Ancho para la columna Nombre */
+        }
+        .table th:nth-child(3), .table td:nth-child(3) {
+            width: 10%; /* Ancho para la columna Fecha */
+        }
+        .table th:nth-child(4), .table td:nth-child(4) {
+            width: 10%; /* Ancho para la columna Producto */
+        }
+        .table th:nth-child(5), .table td:nth-child(5) {
+            width: 10%; /* Ancho para la columna Precio */
+        }
+        .table th:nth-child(6), .table td:nth-child(6) {
+            width: 10%; /* Ancho para la columna Acciones */
+        }
+        .create-button {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .navbar .nav-item.active {
+            background-color: #343a40; /* Color de fondo para el elemento activo */
+        }
+        .navbar .nav-item.active .nav-link {
+            color: #ffffff !important; /* Texto en blanco para el elemento activo */
+        }
+        .navbar .ml-auto {
+            margin-left: auto !important; /* Alineación a la derecha del contenido en la barra de navegación */
+        }
+        .navbar .usuario-info {
+            color: #ffffff; /* Color del texto */
+            margin-right: 10px; /* Espacio a la derecha */
+        }
+        .navbar .btn-usuario {
+            color: #ffffff !important;
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            margin-left: 10px;
+        }
+        .navbar .btn-usuario:hover {
+            background-color: #e0a800 !important;
+            border-color: #d39e00 !important;
+        }
+        .navbar .btn-cerrar-sesion {
+            color: #ffffff !important;
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            margin-left: 10px;
+        }
+        .navbar .btn-cerrar-sesion:hover {
+            background-color: #c82333 !important;
+            border-color: #bd2130 !important;
+        }
+        .form-inline {
+            display: flex;
+            align-items: center;
+        }
+        .form-inline .form-select {
+            margin-right: 5px; /* Reducido para que ocupe menos espacio */
+        }
+        .form-inline .btn {
+            margin-left: 5px; /* Reducido para que ocupe menos espacio */
+        }
+        .total-row {
+            background-color: #f8f9fa; /* Fondo gris claro */
+        }
+        #total-vendido-dia {
+            color: #000000; /* Número en negro */
+        }
+        #total-vendido {
+            color: #000000; /* Número en negro */
+        }
+
+                /* Cambiar el color de fondo del encabezado a verde claro */
+        .bg-light-green {
+            background-color: #268f58; /* Verde claro */
+        }
+    </style>
+</head>
+<body>
+    <!-- Encabezado con navegación -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-light-green">
+            <div class="container">
+                <!-- Logo y nombre del programa -->
+                <a class="navbar-brand" href="../venta/mainVentasController.php">
+                    <img src="../tendedero.png" width="30" height="30" class="d-inline-block align-top" alt="">
+                    Variedades
+                </a>
+                <!-- Navegación -->
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link " href="../venta/mainVentasController.php">Ventas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../compra/mainCompraController.php">Compras</a>
+                    </li>
+                </ul>
+                <!-- Información de usuario y botones -->
+                <div class="ml-auto">
+                    <a href="#" class="btn btn-usuario" id="loginBtn">Iniciar Sesión</a>
+                    <a href="#" class="btn btn-cerrar-sesion hidden" id="logoutBtn" onclick="logout()">Cerrar Sesión</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="container my-2 p-1">
+        <h1 class="text-1xl font-bold mb-1 text-center">Lista de Compras</h1>
+
+        <!-- Filtros de búsqueda -->
+        <form id="filter-form" class="mb-8 form-inline justify-content-center">
+            
+            <div class="form-group">
+                <label for="ano" class="sr-only">Año:</label>
+                <select id="ano" name="ano" class="form-select">
+                    <option value="">Seleccione Año</option>
+                    <?php foreach ($anios as $anio): ?>
+                        <option value="<?= $anio ?>" <?= $ano == $anio ? 'selected' : '' ?>><?= $anio ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group mx-2">
+                <label for="mes" class="sr-only">Mes:</label>
+                <select id="mes" name="mes" class="form-select">
+                    <option value="">Seleccione Mes</option>
+                    <option value="01" <?= $mes == '01' ? 'selected' : '' ?>>Enero</option>
+                    <option value="02" <?= $mes == '02' ? 'selected' : '' ?>>Febrero</option>
+                    <option value="03" <?= $mes == '03' ? 'selected' : '' ?>>Marzo</option>
+                    <option value="04" <?= $mes == '04' ? 'selected' : '' ?>>Abril</option>
+                    <option value="05" <?= $mes == '05' ? 'selected' : '' ?>>Mayo</option>
+                    <option value="06" <?= $mes == '06' ? 'selected' : '' ?>>Junio</option>
+                    <option value="07" <?= $mes == '07' ? 'selected' : '' ?>>Julio</option>
+                    <option value="08" <?= $mes == '08' ? 'selected' : '' ?>>Agosto</option>
+                    <option value="09" <?= $mes == '09' ? 'selected' : '' ?>>Septiembre</option>
+                    <option value="10" <?= $mes == '10' ? 'selected' : '' ?>>Octubre</option>
+                    <option value="11" <?= $mes == '11' ? 'selected' : '' ?>>Noviembre</option>
+                    <option value="12" <?= $mes == '12' ? 'selected' : '' ?>>Diciembre</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            
+        </form>
+
+
+        <!-- Tabla de compras -->
+        <div class="table-wrapper">
+            <table class="table table-striped" id="tabla-compras">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="compras-tbody">
+                    <?php foreach ($compras as $compra): ?>
+                        <tr data-id="<?= $compra['ID'] ?>">
+                            <td><?= $compra['ID'] ?></td>
+                            <td><?= $compra['NOMBRE'] ?></td>
+                            <td><?= $compra['FECHA'] ?></td>
+                            <td><?= $compra['PRODUCTO'] ?></td>
+                            <td><?= number_format($compra['PRECIO'], 2, ',', '.') ?></td>
+                            <td>
+                                <button class="btn btn-success btn-sm btn-editar" data-id="<?= $compra['ID'] ?>">Editar</button>
+                                <button class="btn btn-danger btn-sm eliminar-compra" data-id="<?= $compra['ID'] ?>">Eliminar</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="4" class="text-right font-weight-bold">Total Vendido del Día Actual:</td>
+                        <td id="total-vendido-dia" class="text-success font-weight-bold"></td>
+                        <td></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="4" class="text-right font-weight-bold">Total Vendido:</td>
+                        <td id="total-vendido" class="text-success font-weight-bold"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="create-button">
+            <a href="../compra/compra.html" class="btn btn-primary">Crear compra</a>
+        </div>
+    </div>
+
+    <!-- Modal Editar compra -->
+<div class="modal fade" id="modalEditarcompra" tabindex="-1" role="dialog" aria-labelledby="modalEditarcompraLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarcompraLabel">Editar compra</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formEditarcompra" action="../compra/mainCompraController.php" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="edit-id" name="id">
+                    <div class="form-group">
+                        <label for="edit-nombre">Nombre</label>
+                        <input type="text" class="form-control" id="edit-nombre" name="nombre" required>
+                    </div>
+                    <div>
+                        <label for="edit-fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <div class="relative">
+                            <input type="text" id="edit-fecha" name="fecha" class="datepicker mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                            <button type="button" id="todayBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Hoy</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-producto">Producto</label>
+                        <input type="text" class="form-control" id="edit-producto" name="producto" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-precio">Precio</label>
+                        <input type="number" class="form-control" id="edit-precio" name="precio" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal de Login -->
+    <div id="modal" class="fixed z-10 inset-0 overflow-y-auto modal">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Iniciar Sesión</h2>
+                <form id="loginForm" method="POST" action="../auth/authController.php">
+                    <div class="mb-4">
+                        <label for="usuario" class="block text-sm font-medium text-gray-700">Usuario</label>
+                        <input type="text" id="usuario" name="usuario" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="clave" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <input type="password" id="clave" name="clave" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                    </div>
+                    <input type="hidden" name="tipo_cuenta" value="admin">
+                    <div class="flex justify-end">
+                        <button type="button" id="closeModal" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">Cancelar</button>
+                        <button type="submit" name="login" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Iniciar Sesión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutButton');
+        const modal = document.getElementById('modal');
+        const closeModal = document.getElementById('closeModal');
+        const loginForm = document.getElementById('loginForm');
+
+
+        let isLoggedIn = false;
+        let userName = ''; 
+        
+        // Función para calcular el total vendido del día actual y el total vendido general
+        function calcularTotales() {
+            let totalDiaActual = 0;
+            let totalGeneral = 0;
+
+            // Obtener la fecha del día actual en formato YYYY-MM-DD
+            let fechaActual = new Date().toISOString().split('T')[0];
+
+            $('#tabla-compras tbody tr').each(function() {
+                // Obtener el precio como texto y convertirlo a número
+                let precioTexto = $(this).find('td:eq(4)').text();
+                let precio = parseFloat(precioTexto.replace('.', '').replace(',', '.'));
+                // Obtener la fecha de la compra
+                let fecha = $(this).find('td:eq(4)').text();
+
+                if (!isNaN(precio)) {
+                    // Calcula el total general
+                    totalGeneral += precio;
+                    // Calcula el total del día actual
+                    if (fecha === fechaActual) {
+                        totalDiaActual += precio;
+                    }
+                }
+            });
+
+            // Función para formatear números en el formato `100.000,00`
+            function formatearNumero(numero) {
+                return numero.toFixed(2)
+                    .replace('.', ',')  // Cambia el punto decimal por una coma
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, '.');  // Añade puntos como separadores de miles
+            }
+
+            $('#total-vendido-dia').text(formatearNumero(totalDiaActual)); // Mostrar el total del día actual con formato
+            $('#total-vendido').text(formatearNumero(totalGeneral)); // Mostrar el total general con formato
+        }
+
+        // Llamar a la función cuando el documento esté listo
+        $(document).ready(function () {
+            calcularTotales();
+        });
+
+        // Función para cargar los datos de una compra y mostrar el modal de edición
+        $(document).on("click", ".btn-editar", function() {
+            var idcompra = $(this).data("id");
+            $.ajax({
+                url: "../compra/mainCompraController.php",
+                type: "GET",
+                data: { id: idcompra },
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === "success") {
+                        var compra = response.compra;
+                        $("#edit-id").val(compra.ID);
+                        $("#edit-nombre").val(compra.NOMBRE);
+                        $("#edit-fecha").val(compra.FECHA);
+                        $("#edit-producto").val(compra.PRODUCTO);
+                        $("#edit-precio").val(compra.PRECIO);
+                        $("#modalEditarcompra").modal("show");
+                    } else {
+                        alert("Error al obtener los datos de la compra: " + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    alert("Error al obtener los datos de la compra.");
+                }
+            });
+        });
+
+        // Función para enviar el formulario de edición de compra
+        $("#formEditarcompra").submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: $(this).attr("action"),
+                type: $(this).attr("method"),
+                data: $(this).serialize(),
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === "success") {
+                        // Cerrar el modal de edición
+                        $("#modalEditarcompra").modal("hide");
+                        // Actualizar la fila de la compra en la tabla
+                        var compra = response.compra;
+                        var fila = $('#tabla-compras').find('tr[data-id="' + compra.ID + '"]');
+                        fila.find('td:eq(1)').text(compra.NOMBRE);
+                        fila.find('td:eq(2)').text(compra.FECHA);
+                        fila.find('td:eq(3)').text(compra.PRODUCTO);
+                        fila.find('td:eq(4)').text(compra.PRECIO);
+                        calcularTotales(); // Recalcular totales después de editar
+                    } else {
+                        alert("Error al editar la compra: " + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    alert("Error al editar la compra.");
+                }
+            });
+        });
+
+        // Limpiar el formulario al cerrar el modal de edición
+        $('#modalEditarcompra').on('hidden.bs.modal', function() {
+            $('#formEditarcompra')[0].reset();
+        });
+
+        // Función para eliminar una compra
+        $(document).on("click", ".eliminar-compra", function() {
+            var idcompra = $(this).data("id");
+            if (confirm("¿Estás seguro de que quieres eliminar esta compra?")) {
+                $.ajax({
+                    url: "../compra/mainCompraController.php",
+                    type: "POST",
+                    data: { delete_id: idcompra },
+                    dataType: "json",
+                    success: function(response) {
+                        if (response.status === "success") {
+                            // Eliminar la fila de la tabla
+                            $('tr[data-id="' + idcompra + '"]').remove();
+                            calcularTotales(); // Recalcular totales después de eliminar
+                        } else {
+                            alert("Error al eliminar la compra: " + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                        alert("Error al eliminar la compra.");
+                    }
+                });
+            }
+        });
+              // Muestra el modal de inicio de sesión
+              loginBtn.addEventListener('click', () => {
+            if (isLoggedIn) {
+                // Redirige al perfil del usuario o a otra página
+                window.location.href = '../compra/maincompra.html';
+            } else {
+                modal.classList.add('modal-active');
+            }
+        });
+
+        // Cierra el modal de inicio de sesión al hacer clic en "Cancelar"
+        closeModal.addEventListener('click', () => {
+            modal.classList.remove('modal-active');
+        });
+
+        // Cierra el modal de inicio de sesión al hacer clic fuera del modal
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.classList.remove('modal-active');
+            }
+        });
+
+        // Maneja el formulario de inicio de sesión
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(loginForm);
+            try {
+                const response = await fetch('../auth/authController.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    isLoggedIn = true;
+                    userName = document.getElementById('usuario').value;
+                    //userLabel.textContent = `Bienvenido, ${userName}`;
+                    loginBtn.textContent = `Bienvenido, ${userName}`;
+                    logoutBtn.classList.remove('hidden');
+                    modal.classList.remove('modal-active');
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+
+        // Verifica el estado de la sesión al cargar la página
+                document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('../auth/authController.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        check_session: true
+                    })
+                });
+                const result = await response.json();
+                if (result.loggedIn) {
+                    isLoggedIn = true;
+                    userName = result.userName;
+                    //userLabel.textContent = `Bienvenido, ${userName}`;
+                    loginBtn.textContent = `Bienvenido, ${userName}`;
+                    logoutBtn.classList.remove('hidden');
+                } else {
+                    loginBtn.textContent = 'Iniciar Sesión';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+                // Maneja el cierre de sesión
+        function logout() {
+            fetch('../compra/authController.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    logout: true
+                })
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'logout_successful') {
+                    isLoggedIn = false;
+                    userName = '';
+                    userLabel.textContent = '';
+                    logoutBtn.classList.add('hidden');
+                    loginBtn.textContent = 'Iniciar Sesión';
+                    Swal.fire({
+                        title: 'Sesión cerrada',
+                        text: 'Has cerrado sesión correctamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al cerrar sesión.',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+
+         // Función para cargar los datos de una compra y mostrar el modal de edición
+    $(document).on("click", ".btn-editar", function() {
+        var idcompra = $(this).data("id");
+        $.ajax({
+            url: "../compra/mainCompraController.php",
+            type: "GET",
+            data: { id: idcompra },
+            dataType: "json",
+            success: function(response) {
+                if (response.status === "success") {
+                    var compra = response.compra;
+                    $("#edit-id").val(compra.ID);
+                    $("#edit-nombre").val(compra.NOMBRE);
+                    $("#edit-fecha").val(compra.FECHA);
+                    $("#edit-producto").val(compra.PRODUCTO);
+                    $("#edit-precio").val(compra.PRECIO);
+                    $("#modalEditarcompra").modal("show");
+                } else {
+                    alert("Error al obtener los datos de la compra: " + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert("Error al obtener los datos de la compra.");
+            }
+        });
+    });
+
+    // Función para enviar el formulario de edición de compra
+    $("#formEditarcompra").submit(function(event) {
+        event.preventDefault();
+        $.ajax({
+            url: $(this).attr("action"),
+            type: $(this).attr("method"),
+            data: $(this).serialize(),
+            dataType: "json",
+            success: function(response) {
+                if (response.status === "success") {
+                    // Cerrar el modal de edición
+                    $("#modalEditarcompra").modal("hide");
+                    // Actualizar la fila de la compra en la tabla
+                    var compra = response.compra;
+                    var fila = $('#tabla-compras').find('tr[data-id="' + compra.ID + '"]');
+                    fila.find('td:eq(1)').text(compra.NOMBRE);
+                    fila.find('td:eq(2)').text(compra.FECHA);
+                    fila.find('td:eq(3)').text(compra.PRODUCTO);
+                    fila.find('td:eq(4)').text(compra.PRECIO);
+                } else {
+                    alert("Error al editar la compra: " + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert("Error al editar la compra.");
+            }
+        });
+    });
+
+    // Limpiar el formulario al cerrar el modal de edición
+    $('#modalEditarcompra').on('hidden.bs.modal', function() {
+        $('#formEditarcompra')[0].reset();
+    });
+
+    // Función para la selección de fecha en el modal
+    $(function() {
+        $('#edit-fecha').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        $('#todayBtn').on('click', function() {
+            let hoy = new Date().toISOString().split('T')[0];
+            $('#edit-fecha').val(hoy);
+        });
+    });
+    </script>
+</body>
+</html>

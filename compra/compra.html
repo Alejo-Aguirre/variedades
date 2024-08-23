@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variedades</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"> <!-- SweetAlert2 CSS -->
+    <style>
+        .modal {
+            display: none;
+        }
+        .modal-active {
+            display: block;
+        }
+        .btn-logout {
+            background-color: #dc2626; /* Red-600 */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-logout:hover {
+            background-color: #b91c1c; /* Red-700 */
+        }
+    </style>
+</head>
+<body class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+    <!-- Contenedor Principal -->
+    <div class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+        <!-- Encabezado -->
+        <header class="bg-green-700 p-4 text-white">
+            <div class="container mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <img src="../tendedero.png" alt="Icono" class="w-10 h-10 rounded-full">
+                    <h1 class="text-xl font-semibold">Variedades</h1>
+                    <nav class="flex space-x-4">
+                        <a href="../venta/mainVentasController.php" class="bg-green-500 hover:bg-yellow-400 text-white font-bold py-2 px-4 rounded">Ventas</a>
+                        <a href="../compra/" class="bg-green-500 hover:bg-yellow-400 text-white font-bold py-2 px-4 rounded">Compras</a>
+                    </nav>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <span id="userLabel" class="text-white"></span>
+                    <button id="loginBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Iniciar Sesión</button>
+                    <button id="logoutButton" class="btn-logout hidden bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+                </div>
+            </div>
+        </header>
+
+    <main class="container mx-auto mt-10 px-4">
+        <!-- Añadido un contenedor para centrar el formulario horizontalmente -->
+        <div class="max-w-lg mx-auto bg-white rounded-lg shadow-xl p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Crear Compra</h3>
+            <form id="createSaleForm" class="space-y-4" action="/Variedades/compra/controllerCompra.php" method="POST">
+                <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                </div>
+                <div>
+                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+                    <div class="relative">
+                        <input type="text" id="fecha" name="fecha" class="datepicker mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                        <button type="button" id="todayBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Hoy</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="producto" class="block text-sm font-medium text-gray-700">Producto</label>
+                    <input type="text" id="producto" name="producto" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                </div>
+                <div>
+                    <label for="precio" class="block text-sm font-medium text-gray-700">Precio</label>
+                    <input type="text" id="precio" name="precio" class="precio mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear compra</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Modal de Login -->
+    <div id="modal" class="fixed z-10 inset-0 overflow-y-auto modal">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Iniciar Sesión</h2>
+                <form id="loginForm" method="POST" action="../auth/authController.php">
+                    <div class="mb-4">
+                        <label for="usuario" class="block text-sm font-medium text-gray-700">Usuario</label>
+                        <input type="text" id="usuario" name="usuario" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="clave" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <input type="password" id="clave" name="clave" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                    </div>
+                    <input type="hidden" name="tipo_cuenta" value="admin">
+                    <div class="flex justify-end">
+                        <button type="button" id="closeModal" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">Cancelar</button>
+                        <button type="submit" name="login" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Iniciar Sesión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/locale/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script> <!-- SweetAlert2 JS -->
+
+    <script>
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutButton');
+        const modal = document.getElementById('modal');
+        const closeModal = document.getElementById('closeModal');
+        const loginForm = document.getElementById('loginForm');
+        const userLabel = document.getElementById('userLabel');
+        const createSaleForm = document.getElementById('createSaleForm');
+        const todayBtn = document.getElementById('todayBtn');
+        const fechaInput = document.getElementById('fecha');
+        const precioInput = document.getElementById('precio');
+
+        let isLoggedIn = false;
+        let userName = '';
+
+        // Inicializa el selector de fecha con Pikaday
+        moment.locale('es');
+        const picker = new Pikaday({ 
+            field: fechaInput,
+            format: 'YYYY-MM-DD',
+            i18n: {
+                previousMonth : 'Mes anterior',
+                nextMonth     : 'Mes siguiente',
+                months        : ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+                weekdays      : ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+                weekdaysShort : ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+            },
+            onSelect: function(date) {
+                fechaInput.value = moment(date).format('YYYY-MM-DD'); // Formato de fecha para enviar
+            }
+        });
+
+        // Maneja el botón de hoy en el campo de fecha
+        todayBtn.addEventListener('click', () => {
+            const today = new Date();
+            picker.setDate(today);
+            fechaInput.value = moment(today).format('YYYY-MM-DD'); // Formato de fecha para enviar
+        });
+
+        // Verifica el estado de la sesión al cargar la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('../auth/authController.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        check_session: true
+                    })
+                });
+                const result = await response.json();
+                if (result.loggedIn) {
+                    isLoggedIn = true;
+                    userName = result.userName;
+                    //userLabel.textContent = `Bienvenido, ${userName}`;
+                    loginBtn.textContent = `Bienvenido, ${userName}`;
+                    logoutBtn.classList.remove('hidden');
+                } else {
+                    loginBtn.textContent = 'Iniciar Sesión';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Muestra el modal de inicio de sesión
+        loginBtn.addEventListener('click', () => {
+            if (isLoggedIn) {
+                // Redirige al perfil del usuario o a otra página
+                window.location.href = '../venta/mainVenta.html';
+            } else {
+                modal.classList.add('modal-active');
+            }
+        });
+
+        // Cierra el modal de inicio de sesión al hacer clic en "Cancelar"
+        closeModal.addEventListener('click', () => {
+            modal.classList.remove('modal-active');
+        });
+
+        // Cierra el modal de inicio de sesión al hacer clic fuera del modal
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.classList.remove('modal-active');
+            }
+        });
+
+        // Maneja el formulario de inicio de sesión
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(loginForm);
+            try {
+                const response = await fetch('../auth/authController.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    isLoggedIn = true;
+                    userName = document.getElementById('usuario').value;
+                    //userLabel.textContent = `Bienvenido, ${userName}`;
+                    loginBtn.textContent = `Bienvenido, ${userName}`;
+                    logoutBtn.classList.remove('hidden');
+                    modal.classList.remove('modal-active');
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Maneja el cierre de sesión
+        function logout() {
+            fetch('../auth/authController.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    logout: true
+                })
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'logout_successful') {
+                    isLoggedIn = false;
+                    userName = '';
+                    userLabel.textContent = '';
+                    logoutBtn.classList.add('hidden');
+                    loginBtn.textContent = 'Iniciar Sesión';
+                    Swal.fire({
+                        title: 'Sesión cerrada',
+                        text: 'Has cerrado sesión correctamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al cerrar sesión.',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Maneja el formulario de crear compra
+        createSaleForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (isLoggedIn) {
+                const nombre = document.getElementById('nombre').value;
+                const fecha = document.getElementById('fecha').value;
+                const producto = document.getElementById('producto').value;
+                const precio = precioInput.value.replace(/\D/g, ''); // Elimina caracteres no numéricos del precio
+
+                // Crea un objeto FormData para enviar los datos
+                const formData = new FormData(createSaleForm);
+                formData.append('precio', precio); // Añadir el precio al FormData
+
+                try {
+                    // Envía los datos al controlador PHP
+                    const response = await fetch('../compra/controllerCompra.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Obtén el texto de la respuesta del servidor
+
+                    //quitar esto para ver posibles errores
+                    // const data = await response.text();
+
+                    // Mostrar la respuesta en el usuario
+                    Swal.fire({
+                        title: '¡La compra ha sido creada correctamente!',
+                        // text: data, // Muestra el mensaje recibido desde el servidor
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        createSaleForm.reset();
+                    });
+                } catch (error) {
+                    // Usa SweetAlert2 para mostrar el mensaje de error
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Hubo un problema al crear la compra.',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    console.error('Error:', error);
+                }
+            } else {
+                // Usa SweetAlert2 para mostrar el mensaje de error
+                Swal.fire({
+                    title: 'Inicia sesión',
+                    text: 'Debe iniciar sesión para crear una compra.',
+                    icon: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+
+        // Formatea el campo de precio como moneda
+        precioInput.addEventListener('input', () => {
+            const value = precioInput.value.replace(/\D/g, '');
+            precioInput.value = new Intl.NumberFormat('es-ES').format(value);
+        });
+    </script>
+</body>
+</html>
